@@ -4,7 +4,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
-#include <ctime> 
+#include <ctime>
 #include <cstdlib>
 
 const int SCREEN_WIDTH = 800;
@@ -31,8 +31,11 @@ SDL_Texture* coin = nullptr;
 SDL_Rect coin_rect = {.x =  1, .y = 1, .w = 60, .h = 60};
 
 TTF_Font* font = NULL;
-SDL_Texture* fontTexture;
-SDL_Rect font_rect = {.x =  300, .y = 200, .w = 200, .h = 100};
+SDL_Texture* scoreTextTexture;
+SDL_Rect scoreText_rect = {.x =  300, .y = 250, .w = 200, .h = 100};
+std::string gameover = "GAME OVER";
+SDL_Texture* gameOverTextTexture;
+SDL_Rect gameOverText_rect = {.x =  200, .y = 150, .w = 400, .h = 100};
 
 bool pause = false;
 int score = 0;
@@ -46,14 +49,16 @@ bool init()
         return false;
     }
 
-    IMG_Init(IMG_INIT_PNG);
+    if (IMG_Init(IMG_INIT_PNG) < 0)
+    {
+        std::cout << "SDL could not initialize Image! SDL ERROR: " << SDL_GetError() << std::endl;
+        return false;
+    }
     if (TTF_Init() == -1)
     {
         std::cout << "SDL could not initialize Text! SDL ERROR: " << SDL_GetError() << std::endl;
         return false;
     }
-
-
 
     // Create Window
     window = SDL_CreateWindow(
@@ -107,11 +112,11 @@ void handleEvents()
                     // Start game again
                     pause = false;
                     score = 0;
+
+                    // Repostion player and monster
                     monster_rect.x = SCREEN_WIDTH - 60;
                     player_rect.x = 0;
-
                 }
-            
             default:
                 break;
             }
@@ -131,7 +136,7 @@ SDL_Texture* loadTexture(const char* filename)
     return tex;
 }
 
-void loadTextTexture(std::string text)
+SDL_Texture* loadTextTexture(std::string text)
 {
     SDL_Color color;
     color.r = 255;
@@ -139,27 +144,28 @@ void loadTextTexture(std::string text)
     color.g = 255;
     color.a = 255;
     SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), color);
-    fontTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_Texture* fontTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
     SDL_FreeSurface(textSurface);
+    return fontTexture;
 }
 
 void loadMedia()
 {
+    // Loading font
     font = TTF_OpenFont("assets/lazy.ttf", 28);
 
+    // Assets
     bg = loadTexture("assets/bg.png");
-    if (bg == NULL)
-        std::cout << "Failed to load bg" << SDL_GetError() << std::endl;
     player = loadTexture("assets/player.png");
-    if (player == NULL)
-        std::cout << "Failed to load player" << SDL_GetError() << std::endl;
     monster = loadTexture("assets/monster.png");
-    if (monster == NULL)
-        std::cout<< "Failed to load monster" << SDL_GetError() <<std::endl;
-
     coin = loadTexture("assets/coin.png");
-    if (coin == NULL)
-        std::cout<< "Failed to load coin" << SDL_GetError() <<std::endl;
+
+    // Checking if assets are loaded properly
+    if (coin == NULL || player == NULL || coin == NULL || bg == NULL)
+        std::cout<< "Failed to load assets" << SDL_GetError() <<std::endl;
+
+    // loading game over texture
+    gameOverTextTexture = loadTextTexture(gameover);
 }
 
 void update()
@@ -168,16 +174,27 @@ void update()
     {
         // Update monster
         if (monster_rect.x < 1)
-            monster_vel = 5;
+        {
+            if (score > 10)
+                monster_vel = 6;
+            else if (score > 20)
+                monster_vel = 7;
+            else
+                monster_vel = 5;
+        }
         else if (monster_rect.x > SCREEN_WIDTH - 61)
-            monster_vel = -5;
+        {
+            if (score > 10)
+                monster_vel = -6;
+            else if (score > 20)
+                monster_vel = -7;
+            else
+                monster_vel = -5;
+        }
 
         monster_rect.x += monster_vel;
 
         // update player
-
-
-
         // Collision detection between player and monster
         if ((player_rect.x < monster_rect.x + monster_rect.w) && 
             (player_rect.x + player_rect.w > monster_rect.x) &&
@@ -187,7 +204,7 @@ void update()
             pause = true;
         }
 
-        // update player
+        // update player pos when moving outside of the screen
         if (player_rect.x < - 60)
             player_rect.x = SCREEN_WIDTH + 60;
         else if (player_rect.x > SCREEN_WIDTH + 61)
@@ -198,19 +215,19 @@ void update()
         {
             coin_rect.y += 10;
         }
+
         // collision checking between coin and player
         if ((player_rect.x < coin_rect.x + coin_rect.w) && 
             (player_rect.x + player_rect.w > coin_rect.x) &&
             (player_rect.y < coin_rect.y + coin_rect.h) &&
             (player_rect.y + player_rect.h > player_rect.y))
         {
-            score += 1;
+            score += 1; // Update scrore
+
+            // Respawn the Coin
             coin_rect.x = ((rand() % SCREEN_WIDTH) + 1);
             coin_rect.y = 1;
-            
         }
-
-
     }
 
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
@@ -219,22 +236,24 @@ void update()
 
 void render()
 {
-    // Update screen
+    // Rendering updated assets
     SDL_RenderCopy(renderer, bg, NULL, NULL);
     SDL_RenderCopy(renderer, player, NULL, &player_rect);
     SDL_RenderCopy(renderer, coin, NULL, &coin_rect);
     SDL_RenderCopy(renderer, monster, NULL, &monster_rect);
+
+    // if game is pause means game is over then render gameover and score
     if (pause == true)
     {
         std::string str = "Score: ";
         str += std::to_string(score);
-        loadTextTexture(str);
-        // SDL_RenderCopy(renderer, fontTexture, NULL, &monster_rect);
-        SDL_RenderCopy(renderer, fontTexture, NULL, &font_rect);
+        scoreTextTexture = loadTextTexture(str);
+
+        SDL_RenderCopy(renderer, gameOverTextTexture, NULL, &gameOverText_rect);
+        SDL_RenderCopy(renderer, scoreTextTexture, NULL, &scoreText_rect);
     }
 
     SDL_RenderPresent(renderer);
-    // SDL_Delay(100);
 }
 
 void clean()
@@ -246,9 +265,10 @@ void clean()
 
 int main()
 {
+    // Set seed for rand
     srand(time(0));
+    // Set random position for coin before main loop is started
     coin_rect.x = ((rand() % SCREEN_WIDTH) + 1);
-    std::cout<<coin_rect.x<<std::endl;
 
     // Initialize
     init();
@@ -256,9 +276,9 @@ int main()
     // load texture
     loadMedia();
 
+    // Delta Time
     const int FPS = 60;
     const int desiredDelta = 1000 / FPS;
-
 
     // Event loop
     while (!quit)

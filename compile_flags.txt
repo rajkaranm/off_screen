@@ -1,0 +1,7 @@
+-IC:/SDL2_w64/include
+-LC:/SDL2_w64/lib
+-lSDL2main
+-lSDL2 
+-lSDL2_ttf 
+-lSDL2_image 
+
