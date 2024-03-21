@@ -27,9 +27,11 @@ SDL_Texture* monster = nullptr;
 SDL_Rect monster_rect = {.x = SCREEN_WIDTH - 60, .y = 455, .w = 60, .h = 60};
 int monster_vel = 10;
 
+// Coin
 SDL_Texture* coin = nullptr;
 SDL_Rect coin_rect = {.x =  1, .y = 1, .w = 60, .h = 60};
 
+// Font
 TTF_Font* font = NULL;
 SDL_Texture* scoreTextTexture;
 SDL_Rect scoreText_rect = {.x =  300, .y = 250, .w = 200, .h = 100};
@@ -37,6 +39,7 @@ std::string gameover = "GAME OVER";
 SDL_Texture* gameOverTextTexture;
 SDL_Rect gameOverText_rect = {.x =  200, .y = 150, .w = 400, .h = 100};
 
+// Util
 bool pause = false;
 int score = 0;
 
