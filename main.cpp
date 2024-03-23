@@ -100,12 +100,12 @@ void handleEvents()
         {
             switch (event.key.keysym.sym)
             {
-            case SDLK_LEFT:
+            case SDLK_a:
                 if (pause == false)
                     player_rect.x -= 10;
                 break;
             
-            case SDLK_RIGHT:
+            case SDLK_d:
                 if (pause == false)
                     player_rect.x += 10;
                 break;

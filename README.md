@@ -1,6 +1,13 @@
 # OFF SCREEN
 
-Off screen is a game build with C++ and SDL2 out of frustration of college and daily work.
+Off screen is a game build with C++ and SDL2 out of frustration of college and daily work. Download the game from [OFF SCREEN](https://github.com/rajkaranm/off_screen/releases)
 
-## Setup
-Setup [SDL2](https://lazyfoo.net/tutorials/SDL/01_hello_SDL/windows/index.php) library and paste lib and include path in Makefile. 
+## Development
+
+```bash
+git clone https://github.com/rajkaranm/off_screen
+cd off_screen
+make
+```
+
+You can also use `mingw32-make.exe` command to run the project in windows.
